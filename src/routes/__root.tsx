@@ -84,11 +84,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Instashop" },
       { property: "og:description", content: "Marketplace for Instagram sellers in India." },
       { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://res.cloudinary.com/drvug594q/image/upload/v1794002938/flow-image-erasio_1_ketirt.jpg",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Instashop" },
+      { name: "twitter:description", content: "Marketplace for Instagram sellers in India." },
+      {
+        name: "twitter:image",
+        content: "https://res.cloudinary.com/drvug594q/image/upload/v1794002938/flow-image-erasio_1_ketirt.jpg",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://res.cloudinary.com" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,wght@1,400;1,500;1,600&display=swap",
@@ -97,7 +108,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      {
+        rel: "icon",
+        href: "https://res.cloudinary.com/drvug594q/image/upload/c_crop,g_north_west,h_164,w_171/Untitled_design__2_-removebg-preview_mcxgyr.png",
+        type: "image/png",
+      },
+    ],
+    scripts: [
+      {
+        attrs: { async: true, src: "https://www.googletagmanager.com/gtm.js?id=GTM-57T9MB6B" },
+      },
+      {
+        children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());`,
+      },
     ],
   }),
   shellComponent: RootShell,

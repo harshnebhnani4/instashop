@@ -41,8 +41,17 @@ export function Navbar() {
             scrolled ? "max-w-4xl px-4 py-2 shadow-card" : "max-w-6xl px-6 py-3",
           )}
         >
-          <a href="/" className="font-display text-xl font-extrabold tracking-tight">
-            insta<span className="text-primary">shop</span>
+          <a href="/" className="flex items-center gap-2 font-display text-xl font-extrabold tracking-tight">
+            <img
+              src="https://res.cloudinary.com/drvug594q/image/upload/c_crop,g_north_west,h_164,w_171/Untitled_design__2_-removebg-preview_mcxgyr.png"
+              alt="Instashop"
+              className="h-10 w-10 object-contain"
+            />
+            <img
+              src="https://res.cloudinary.com/drvug594q/image/upload/c_crop,g_north_west,h_84,w_255,x_174,y_43/Untitled_design__2_-removebg-preview_mcxgyr.png"
+              alt="Instashop"
+              className="h-9 w-auto object-contain"
+            />
           </a>
           <ul className="hidden items-center gap-6 text-sm font-medium md:flex">
             {["Shop", "Instagram Shops", "Categories", "Sell on Instashop"].map((l) => (
@@ -84,7 +93,25 @@ export function Navbar() {
 const HERO_WORD = "instashop";
 const HERO_FONT = '"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif';
 
+const HERO_VIDEO_DESKTOP = "https://res.cloudinary.com/drvug594q/video/upload/f_auto,q_auto/v1793172851/Desktop_urxqob.mp4";
+const HERO_VIDEO_MOBILE = "https://res.cloudinary.com/drvug594q/video/upload/f_auto,q_auto/v1793172854/Mobile_u4gqsn.mp4";
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(min-width: 768px)").matches : true,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const on = () => setIsDesktop(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return isDesktop;
+}
+
 export function Hero() {
+  const isDesktop = useIsDesktop();
   const sectionRef = useRef<HTMLElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -237,12 +264,16 @@ export function Hero() {
     <section ref={sectionRef} className="relative" style={{ height: "420vh" }}>
       <div className="sticky top-0 h-[100svh] overflow-hidden bg-background">
         <video
+          key={isDesktop ? "desktop" : "mobile"}
           ref={videoRef}
-          src="https://res.cloudinary.com/drvug594q/video/upload/v1793118826/Gift_box_opening_with_products_20261027215936_ljc215.mp4"
+          src={isDesktop ? HERO_VIDEO_DESKTOP : HERO_VIDEO_MOBILE}
           autoPlay
           loop
           muted
           playsInline
+          preload="auto"
+          // @ts-expect-error fetchPriority is valid on <video> but missing from React's DOM typings
+          fetchPriority="high"
           className="absolute inset-0 h-full w-full object-cover"
           style={{
             WebkitMaskImage: "url(#heroWordMask)",
