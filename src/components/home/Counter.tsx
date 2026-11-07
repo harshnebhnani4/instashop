@@ -111,7 +111,7 @@ export function CounterPicks() {
                 i % 2 ? "rotate-3" : "-rotate-3",
               )}
             >
-              <div className="ctr-img-wrap w-full flex-1">
+              <div className="ctr-img-wrap min-h-0 w-full flex-1">
                 <img src={p.image} alt={p.name} loading="lazy" className="mx-auto block h-full w-full object-contain" style={{ filter: "drop-shadow(0 30px 40px rgb(0 0 0 / 0.18))" }} />
               </div>
               <div className="text-center">
@@ -128,8 +128,10 @@ export function CounterPicks() {
 
       <section
         className="px-5 pb-24 pt-4 text-center sm:pb-32"
-        // pulls this section up so the empty space below the cards disappears
-        style={{ marginTop: `calc(-1 * ${SLIDER_GAP} + 1rem)` }}
+        // pulls this section up so the empty space below the cards disappears,
+        // but keeps enough margin to stay clear of the progress bar (bottom-6 = 1.5rem)
+        // so this section's content doesn't paint over it
+        style={{ marginTop: `calc(-1 * ${SLIDER_GAP} + 2.5rem)` }}
       >
         <h2 className="mx-auto max-w-[16ch] text-4xl font-extrabold leading-tight sm:text-6xl">Love what you see?</h2>
         <p className="mx-auto mt-4 max-w-md text-muted-foreground">

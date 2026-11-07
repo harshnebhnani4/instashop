@@ -4,7 +4,7 @@ import { Heart, Plus, BadgeCheck, RotateCcw, Wallet, Store, PackagePlus, Share2,
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { shops } from "@/data/shops";
-import { InstagramIcon, Reveal, Ticker, Tilt } from "./primitives";
+import { InstagramIcon, Reveal, Tilt } from "./primitives";
 import { cn } from "@/lib/utils";
 
 const products = shops.flatMap((s, i) => (i < 8 ? [{ ...s.products[0], shop: s }] : []));
@@ -232,14 +232,6 @@ export function HowItWorks() {
             <PhonePreview active={active} />
           </div>
         </div>
-      </div>
-      <div className="mt-20 grid grid-cols-3 gap-4 rounded-[2rem] bg-blush p-8 text-center">
-        {[[2400, "+", "Sellers"], [180000, "+", "Orders"], [320, "", "Cities"]].map(([v, suf, l]) => (
-          <div key={l as string}>
-            <p className="font-display text-3xl font-extrabold text-primary sm:text-6xl"><Ticker value={v as number} suffix={suf as string} /></p>
-            <p className="mt-1 text-sm font-semibold">{l as string}</p>
-          </div>
-        ))}
       </div>
     </section>
   );

@@ -103,12 +103,21 @@ export function SellerDialog({ children }: { children: ReactNode }) {
               description: `We'll reach out to @${values.instagram} within 24 hours to set up your shop.`,
             });
             form.reset();
-            setOpen(false);
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Payment succeeded but we couldn't save your details.");
           }
         },
+        modal: {
+          // Re-open our dialog (with the entered details intact) if the user
+          // backs out of Razorpay's checkout instead of completing payment.
+          ondismiss: () => setOpen(true),
+        },
       });
+
+      // Close our own dialog first: Radix's focus trap and pointer-events lock
+      // otherwise fight Razorpay's checkout overlay for clicks/focus, making its
+      // buttons unresponsive until the trap happens to let a click through.
+      setOpen(false);
       razorpay.open();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");

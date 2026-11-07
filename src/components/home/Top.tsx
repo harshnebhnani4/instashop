@@ -308,7 +308,7 @@ export function Hero() {
           </span>
         </div>
 
-        <div ref={afterRef} className="absolute inset-x-0 top-[62%] z-[4] px-6 text-center opacity-0">
+        <div ref={afterRef} className="absolute inset-x-0 bottom-6 z-[4] px-6 text-center opacity-0 sm:bottom-10">
           <span className="mb-4 inline-block rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">India's home for Insta brands</span>
           <p className="mx-auto mb-7 max-w-md text-lg text-muted-foreground">
             Real checkout, real sellers — shop your favourite Instagram brands in one place.
