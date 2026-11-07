@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { connectDB } from "./db.js";
 import { paymentsRouter } from "./routes/payments.js";
+import { adminRouter } from "./routes/admin.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/payments", paymentsRouter);
+app.use("/api/admin", adminRouter);
 
 connectDB()
   .then(() => {

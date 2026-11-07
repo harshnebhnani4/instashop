@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Check, Store, X } from "lucide-react";
+import { Check, Eye, EyeOff, Store, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +39,7 @@ const sellerSchema = z.object({
   phone: z.string().trim().regex(/^\+?[0-9]{10,13}$/, "Enter a valid phone number"),
   instagram: z.string().trim().min(2, "Enter your Instagram handle").transform((v) => v.replace(/^@/, "")),
   category: z.enum(SELLER_CATEGORIES, { message: "Pick a category" }),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   promoCode: z.string().trim().optional(),
 });
 
@@ -46,13 +47,14 @@ type SellerFormValues = z.infer<typeof sellerSchema>;
 
 export function SellerDialog({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [promoStatus, setPromoStatus] = useState<{ state: "idle" | "checking" | "valid" | "invalid"; amount: number | null }>({
     state: "idle",
     amount: null,
   });
   const form = useForm<SellerFormValues>({
     resolver: zodResolver(sellerSchema),
-    defaultValues: { name: "", email: "", phone: "", instagram: "", promoCode: "" },
+    defaultValues: { name: "", email: "", phone: "", instagram: "", password: "", promoCode: "" },
   });
 
   const promoCode = form.watch("promoCode");
@@ -127,7 +129,13 @@ export function SellerDialog({ children }: { children: ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[2rem] border-0 bg-card p-0 shadow-card sm:max-w-md">
+      {/*
+        Grid with explicit rows: header takes its natural height, the form gets
+        the remaining space and can shrink (minmax(0,1fr)) so it scrolls
+        internally instead of being clipped or scrolling the page.
+        90dvh accounts for mobile browser toolbars.
+      */}
+      <DialogContent className="grid max-h-[90dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-[2rem] border-0 bg-card p-0 shadow-card sm:max-w-md">
         <div className="bg-hero grain rounded-t-[2rem] px-6 pb-6 pt-7">
           <DialogHeader>
             <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
@@ -141,7 +149,12 @@ export function SellerDialog({ children }: { children: ReactNode }) {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-6 pb-6 pt-5">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="space-y-4 overflow-y-auto overscroll-contain px-6 pb-8 pt-5"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -212,6 +225,37 @@ export function SellerDialog({ children }: { children: ReactNode }) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Create a password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="At least 6 characters"
+                        className="pr-10"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <p className="text-[0.8rem] text-muted-foreground">
+                    You'll use this to log in and manage your shop later.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

@@ -9,6 +9,7 @@ const sellerSchema = new mongoose.Schema(
     phone: { type: String, required: true, trim: true },
     instagram: { type: String, required: true, trim: true },
     category: { type: String, required: true, enum: CATEGORIES },
+    passwordHash: { type: String, default: "" },
     promoCode: { type: String, trim: true, default: "" },
     amount: { type: Number, required: true },
     razorpayOrderId: { type: String, required: true },
