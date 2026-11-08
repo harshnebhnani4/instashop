@@ -38,6 +38,16 @@ function validatePassword(body) {
   return null;
 }
 
+const FRONTEND_ORIGINS = (process.env.FRONTEND_URL || "http://localhost:8080").split(",").map((o) => o.trim());
+
+// Picks the frontend origin to redirect back to after checkout: whichever
+// configured origin the request actually came from (so this works for both
+// the production domain and local dev), falling back to the first one.
+function resolveFrontendOrigin(req) {
+  const referer = req.get("referer") || req.get("origin") || "";
+  return FRONTEND_ORIGINS.find((origin) => referer.startsWith(origin)) || FRONTEND_ORIGINS[0];
+}
+
 // Resolves the price to charge. No promo code -> default price.
 // Promo code given -> must match an active row in the promocodes collection, or it's rejected.
 async function resolveAmount(promoCode) {
@@ -192,5 +202,44 @@ paymentsRouter.post("/webhook", async (req, res) => {
   } catch (err) {
     console.error("Failed to finalize seller from webhook", err);
     return res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Razorpay checkout posts here (as a real browser navigation, not a fetch)
+// when configured with redirect: true + this callback_url. Unlike the JS
+// handler in /verify, this is a full top-level page load driven by
+// Razorpay/the bank — it survives a mobile UPI app switch, so it's the
+// primary way users now see their confirmation, not just a data fallback.
+paymentsRouter.post("/callback", async (req, res) => {
+  const frontendOrigin = resolveFrontendOrigin(req);
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body ?? {};
+
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.redirect(303, `${frontendOrigin}/payment-success?status=error`);
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+
+  if (expectedSignature !== razorpay_signature) {
+    return res.redirect(303, `${frontendOrigin}/payment-success?status=error`);
+  }
+
+  try {
+    const seller = await finalizeSeller(razorpay_order_id, razorpay_payment_id);
+    if (!seller) {
+      return res.redirect(303, `${frontendOrigin}/payment-success?status=error`);
+    }
+    const params = new URLSearchParams({
+      status: "success",
+      payment_id: razorpay_payment_id,
+      instagram: seller.instagram,
+    });
+    return res.redirect(303, `${frontendOrigin}/payment-success?${params.toString()}`);
+  } catch (err) {
+    console.error("Failed to save seller after payment", err);
+    return res.redirect(303, `${frontendOrigin}/payment-success?status=error`);
   }
 });

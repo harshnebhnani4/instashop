@@ -9,7 +9,12 @@ export interface RazorpayOptions {
   order_id: string;
   prefill?: { name?: string; email?: string; contact?: string };
   theme?: { color?: string };
-  handler: (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => void;
+  handler?: (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => void;
+  // When set, Razorpay redirects the browser to callback_url with the
+  // payment details (as a real page navigation, not a JS callback) instead
+  // of invoking `handler` — ignored if `redirect` isn't also true.
+  callback_url?: string;
+  redirect?: boolean;
   modal?: { ondismiss?: () => void };
 }
 

@@ -15,7 +15,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getJSON, postJSON } from "@/lib/api";
+import { API_URL, getJSON, postJSON } from "@/lib/api";
 import { loadRazorpayScript } from "@/lib/razorpay";
 import { cn } from "@/lib/utils";
 
@@ -98,21 +98,12 @@ export function SellerDialog({ children }: { children: ReactNode }) {
         order_id: order.orderId,
         prefill: { name: values.name, email: values.email, contact: values.phone },
         theme: { color: "#E27396" },
-        handler: async (response) => {
-          try {
-            // The Razorpay webhook also finalizes this signup server-side as a
-            // fallback (mobile browsers sometimes drop this callback after a
-            // UPI app switch), so a failure here isn't necessarily fatal —
-            // but when it does succeed, confirm immediately for a snappier UX.
-            await postJSON("/api/payments/verify", response);
-            toast.success("Payment successful — you're on the list!", {
-              description: `We'll reach out to @${values.instagram} within 24 hours to set up your shop.`,
-            });
-            form.reset();
-          } catch (err) {
-            toast.error(err instanceof Error ? err.message : "Payment succeeded but we couldn't save your details.");
-          }
-        },
+        // Redirect-based confirmation instead of a JS handler: Razorpay posts
+        // the result to our backend as a real page navigation, which (unlike
+        // an in-page callback) survives a mobile UPI app switch reliably. Our
+        // backend verifies it and redirects on to /payment-success.
+        callback_url: `${API_URL}/api/payments/callback`,
+        redirect: true,
         modal: {
           // Re-open our dialog (with the entered details intact) if the user
           // backs out of Razorpay's checkout instead of completing payment.

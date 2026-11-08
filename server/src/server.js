@@ -22,6 +22,8 @@ app.use(
     },
   }),
 );
+// Razorpay's redirect-based checkout callback posts form-encoded data.
+app.use(express.urlencoded({ extended: false }));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/payments", paymentsRouter);
