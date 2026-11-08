@@ -12,7 +12,16 @@ const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:8080")
   .map((o) => o.trim());
 
 app.use(cors({ origin: allowedOrigins }));
-app.use(express.json());
+// Keep the raw request bytes around for the Razorpay webhook, which must
+// verify its signature against the exact bytes Razorpay sent, not a
+// re-serialized copy of the parsed JSON.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/payments", paymentsRouter);

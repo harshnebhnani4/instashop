@@ -12,7 +12,7 @@ const sellerSchema = new mongoose.Schema(
     passwordHash: { type: String, default: "" },
     promoCode: { type: String, trim: true, default: "" },
     amount: { type: Number, required: true },
-    razorpayOrderId: { type: String, required: true },
+    razorpayOrderId: { type: String, required: true, unique: true },
     razorpayPaymentId: { type: String, required: true },
   },
   { timestamps: true },

@@ -100,7 +100,11 @@ export function SellerDialog({ children }: { children: ReactNode }) {
         theme: { color: "#E27396" },
         handler: async (response) => {
           try {
-            await postJSON("/api/payments/verify", { ...values, ...response });
+            // The Razorpay webhook also finalizes this signup server-side as a
+            // fallback (mobile browsers sometimes drop this callback after a
+            // UPI app switch), so a failure here isn't necessarily fatal —
+            // but when it does succeed, confirm immediately for a snappier UX.
+            await postJSON("/api/payments/verify", response);
             toast.success("Payment successful — you're on the list!", {
               description: `We'll reach out to @${values.instagram} within 24 hours to set up your shop.`,
             });

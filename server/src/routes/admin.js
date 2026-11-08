@@ -7,12 +7,23 @@ import { requireAuth, signAdminToken } from "../middleware/auth.js";
 export const adminRouter = Router();
 
 const RANGES = ["daily", "monthly", "yearly"];
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
+// Day/month/year boundaries must be computed in IST (the business's timezone),
+// not the server's local/UTC time — otherwise "today" cuts off a few hours
+// early for everyone in India, while a server running on UTC still shows the
+// extra records once the window widens to "this month".
 function rangeStart(range) {
-  const now = new Date();
-  if (range === "monthly") return new Date(now.getFullYear(), now.getMonth(), 1);
-  if (range === "yearly") return new Date(now.getFullYear(), 0, 1);
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const istNow = new Date(Date.now() + IST_OFFSET_MS);
+  let istBoundary;
+  if (range === "monthly") {
+    istBoundary = Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), 1);
+  } else if (range === "yearly") {
+    istBoundary = Date.UTC(istNow.getUTCFullYear(), 0, 1);
+  } else {
+    istBoundary = Date.UTC(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
+  }
+  return new Date(istBoundary - IST_OFFSET_MS);
 }
 
 function parseRange(value) {

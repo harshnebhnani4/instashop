@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import Razorpay from "razorpay";
 import { CATEGORY_VALUES, Seller } from "../models/Seller.js";
 import { PromoCode } from "../models/PromoCode.js";
+import { PendingSignup } from "../models/PendingSignup.js";
 import { sendSellerWelcomeEmail } from "../lib/email.js";
 
 export const paymentsRouter = Router();
@@ -48,6 +49,43 @@ async function resolveAmount(promoCode) {
   return { amount: promo.amount, error: null };
 }
 
+// Turns a confirmed payment into a Seller record. Called from both the
+// frontend's post-payment request and the Razorpay webhook — whichever
+// arrives first wins, the other is a no-op. Safe to call more than once
+// for the same order.
+async function finalizeSeller(razorpayOrderId, razorpayPaymentId) {
+  const existing = await Seller.findOne({ razorpayOrderId });
+  if (existing) return existing;
+
+  const pending = await PendingSignup.findOne({ razorpayOrderId });
+  if (!pending) return null;
+
+  let seller;
+  try {
+    seller = await Seller.create({
+      name: pending.name,
+      email: pending.email,
+      phone: pending.phone,
+      instagram: pending.instagram,
+      category: pending.category,
+      passwordHash: pending.passwordHash,
+      promoCode: pending.promoCode,
+      amount: pending.amount,
+      razorpayOrderId,
+      razorpayPaymentId,
+    });
+  } catch (err) {
+    // Unique index on razorpayOrderId: the other path (webhook vs. frontend)
+    // won the race between our existence check and this insert.
+    if (err.code === 11000) return Seller.findOne({ razorpayOrderId });
+    throw err;
+  }
+
+  await PendingSignup.deleteOne({ razorpayOrderId });
+  sendSellerWelcomeEmail({ name: seller.name, email: seller.email, instagram: seller.instagram });
+  return seller;
+}
+
 paymentsRouter.get("/promo-code", async (req, res) => {
   const code = typeof req.query.code === "string" ? req.query.code : "";
   if (!code.trim()) return res.status(400).json({ error: "Enter a promo code" });
@@ -58,10 +96,12 @@ paymentsRouter.get("/promo-code", async (req, res) => {
 });
 
 paymentsRouter.post("/create-order", async (req, res) => {
-  const error = validateSeller(req.body);
+  const { name, email, phone, instagram, category, password, promoCode } = req.body ?? {};
+
+  const error = validateSeller(req.body) || validatePassword(req.body);
   if (error) return res.status(400).json({ error });
 
-  const { amount, error: promoError } = await resolveAmount(req.body?.promoCode);
+  const { amount, error: promoError } = await resolveAmount(promoCode);
   if (promoError) return res.status(400).json({ error: promoError });
 
   try {
@@ -70,6 +110,20 @@ paymentsRouter.post("/create-order", async (req, res) => {
       currency: "INR",
       receipt: `seller_${Date.now()}`,
     });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await PendingSignup.create({
+      razorpayOrderId: order.id,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      instagram: instagram.trim().replace(/^@/, ""),
+      category,
+      passwordHash,
+      promoCode: typeof promoCode === "string" ? promoCode.trim() : "",
+      amount,
+    });
+
     return res.json({ orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
     console.error("Failed to create Razorpay order", err);
@@ -77,11 +131,12 @@ paymentsRouter.post("/create-order", async (req, res) => {
   }
 });
 
+// Fired by the browser right after Razorpay's checkout succeeds. On mobile,
+// especially after a UPI app round-trip, this request can simply never
+// happen — the webhook below is the reliable fallback for that case.
 paymentsRouter.post("/verify", async (req, res) => {
-  const { name, email, phone, instagram, category, promoCode, password, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body ?? {};
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body ?? {};
 
-  const error = validateSeller(req.body) || validatePassword(req.body);
-  if (error) return res.status(400).json({ error });
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
     return res.status(400).json({ error: "Missing payment details" });
   }
@@ -95,28 +150,47 @@ paymentsRouter.post("/verify", async (req, res) => {
     return res.status(400).json({ error: "Payment verification failed" });
   }
 
-  const { amount, error: promoError } = await resolveAmount(promoCode);
-  if (promoError) return res.status(400).json({ error: promoError });
-
   try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    const seller = await Seller.create({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      instagram: instagram.trim().replace(/^@/, ""),
-      category,
-      passwordHash,
-      promoCode: typeof promoCode === "string" ? promoCode.trim() : "",
-      amount,
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-    });
-    sendSellerWelcomeEmail({ name: seller.name, email: seller.email, instagram: seller.instagram });
-
+    const seller = await finalizeSeller(razorpay_order_id, razorpay_payment_id);
+    if (!seller) {
+      return res.status(404).json({ error: "We couldn't find this order. Contact support if you were charged." });
+    }
     return res.status(201).json({ id: seller._id });
   } catch (err) {
     console.error("Failed to save seller after payment", err);
     return res.status(500).json({ error: "Payment succeeded but saving your details failed. Contact support." });
+  }
+});
+
+// Razorpay calls this directly from their servers once a payment is
+// captured — independent of whatever happens in the buyer's browser. This
+// is what makes signup reliable on mobile when the /verify call above gets
+// dropped during a UPI app switch.
+paymentsRouter.post("/webhook", async (req, res) => {
+  const signature = req.headers["x-razorpay-signature"];
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  if (!secret || !signature || !req.rawBody) {
+    return res.status(400).json({ error: "Webhook not configured" });
+  }
+
+  const expectedSignature = crypto.createHmac("sha256", secret).update(req.rawBody).digest("hex");
+  if (expectedSignature !== signature) {
+    return res.status(400).json({ error: "Invalid webhook signature" });
+  }
+
+  // Always 200 once the signature checks out, so Razorpay doesn't keep
+  // retrying events we deliberately ignore (anything but a captured payment).
+  const payment = req.body?.payload?.payment?.entity;
+  if (req.body?.event !== "payment.captured" || !payment?.order_id || !payment?.id) {
+    return res.json({ ok: true, ignored: true });
+  }
+
+  try {
+    await finalizeSeller(payment.order_id, payment.id);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("Failed to finalize seller from webhook", err);
+    return res.status(500).json({ error: "Internal error" });
   }
 });
