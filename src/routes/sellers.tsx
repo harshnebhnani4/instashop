@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { Check, MessageCircle, Sparkles } from "lucide-react";
 import { AnnouncementBar, Navbar } from "@/components/home/Top";
 import { Footer } from "@/components/home/Bottom";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,20 @@ function LeadForm({ onSubmitted }: { onSubmitted: (values: LeadFormValues) => vo
         <span className="font-display text-xl font-extrabold text-primary">₹1,499</span>
       </div>
 
+      <ul className="mt-6 space-y-3 rounded-[2rem] bg-card p-6 shadow-card">
+        <li className="font-semibold">What you get for ₹1,499:</li>
+        {[
+          "Your own shop page on Instashop with your branding",
+          "Your products listed and ready for buyers to browse and order",
+          "Promotion to buyers on our Instagram as part of the 1 January launch",
+        ].map((line) => (
+          <li key={line} className="flex items-start gap-2 text-sm text-muted-foreground">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-forest" />
+            {line}
+          </li>
+        ))}
+      </ul>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4 rounded-[2rem] bg-card p-6 shadow-card">
           <FormField
@@ -167,8 +181,11 @@ function LeadForm({ onSubmitted }: { onSubmitted: (values: LeadFormValues) => vo
               "shimmer w-full rounded-full bg-primary py-3.5 font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60",
             )}
           >
-            {form.formState.isSubmitting ? "Submitting…" : "Claim my founding seller spot"}
+            {form.formState.isSubmitting ? "Submitting…" : "Apply for a founding seller spot"}
           </button>
+          <p className="text-center text-xs text-muted-foreground">
+            No payment now. We'll message you on WhatsApp to confirm your spot.
+          </p>
         </form>
       </Form>
     </>
