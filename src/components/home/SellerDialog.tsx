@@ -45,8 +45,58 @@ const sellerSchema = z.object({
 
 type SellerFormValues = z.infer<typeof sellerSchema>;
 
+const URL_PARAM = "seller";
+const URL_VALUE = "open";
+
+// Several SellerDialog instances exist on the page at once (nav, hero,
+// footer CTA) but they all read the same URL, so on a fresh visit to
+// ?seller=open exactly one of them should claim it — not all five at once.
+let urlOpenClaimed = false;
+
+// Keeps the dialog's open state mirrored in the URL (?seller=open) so the
+// form is a shareable/bookmarkable link and the browser back button closes
+// it, without changing how the dialog itself looks or behaves.
+function useUrlSyncedOpen() {
+  const [open, setOpenState] = useState(false);
+
+  useEffect(() => {
+    if (urlOpenClaimed) return;
+    if (new URLSearchParams(window.location.search).get(URL_PARAM) === URL_VALUE) {
+      urlOpenClaimed = true;
+      setOpenState(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    function handlePopState() {
+      setOpenState(new URLSearchParams(window.location.search).get(URL_PARAM) === URL_VALUE);
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  function setOpen(next: boolean) {
+    setOpenState(next);
+    const url = new URL(window.location.href);
+    const alreadyOpenInUrl = url.searchParams.get(URL_PARAM) === URL_VALUE;
+    if (next && !alreadyOpenInUrl) {
+      url.searchParams.set(URL_PARAM, URL_VALUE);
+      window.history.pushState({ sellerDialog: true }, "", url);
+    } else if (!next && alreadyOpenInUrl) {
+      // Rewrite the current entry instead of history.back() — if the visitor
+      // landed straight on ?seller=open (a shared link), there's nothing of
+      // ours further back to go to, and back() would navigate them off the
+      // site entirely instead of just closing the dialog.
+      url.searchParams.delete(URL_PARAM);
+      window.history.replaceState({}, "", url);
+    }
+  }
+
+  return [open, setOpen] as const;
+}
+
 export function SellerDialog({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useUrlSyncedOpen();
   const [showPassword, setShowPassword] = useState(false);
   const [promoStatus, setPromoStatus] = useState<{ state: "idle" | "checking" | "valid" | "invalid"; amount: number | null }>({
     state: "idle",
