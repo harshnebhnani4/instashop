@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDB } from "./db.js";
 import { paymentsRouter } from "./routes/payments.js";
 import { adminRouter } from "./routes/admin.js";
+import { leadsRouter } from "./routes/leads.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,6 +29,7 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/payments", paymentsRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/leads", leadsRouter);
 
 connectDB()
   .then(() => {

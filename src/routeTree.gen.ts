@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
+import { Route as SellersRouteImport } from './routes/sellers'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminPromoCodesRouteImport } from './routes/admin/promo-codes'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
   id: '/payment-success',
   path: '/payment-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersRoute = SellersRouteImport.update({
+  id: '/sellers',
+  path: '/sellers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -56,6 +62,7 @@ const AdminPromoCodeRoute = AdminPromoCodeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/sellers': typeof SellersRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
   '/admin/sellers': typeof AdminSellersRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/sellers': typeof SellersRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
   '/admin/sellers': typeof AdminSellersRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/sellers': typeof SellersRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
   '/admin/sellers': typeof AdminSellersRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/payment-success'
+    | '/sellers'
     | '/admin/login'
     | '/admin/promo-codes'
     | '/admin/sellers'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/payment-success'
+    | '/sellers'
     | '/admin/login'
     | '/admin/promo-codes'
     | '/admin/sellers'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/payment-success'
+    | '/sellers'
     | '/admin/login'
     | '/admin/promo-codes'
     | '/admin/sellers'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
+  SellersRoute: typeof SellersRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPromoCodesRoute: typeof AdminPromoCodesRoute
   AdminSellersRoute: typeof AdminSellersRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/payment-success'
       fullPath: '/payment-success'
       preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers': {
+      id: '/sellers'
+      path: '/sellers'
+      fullPath: '/sellers'
+      preLoaderRoute: typeof SellersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
+  SellersRoute: SellersRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPromoCodesRoute: AdminPromoCodesRoute,
   AdminSellersRoute: AdminSellersRoute,
