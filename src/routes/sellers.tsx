@@ -30,6 +30,7 @@ const CATEGORIES = [
 
 const leadSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name"),
+  email: z.string().trim().email("Enter a valid email"),
   instagram: z.string().trim().min(2, "Enter your Instagram handle").transform((v) => v.replace(/^@/, "")),
   category: z.enum(CATEGORIES, { message: "Pick a category" }),
   whatsapp: z.string().trim().regex(/^\+?[0-9]{10,13}$/, "Enter a valid WhatsApp number"),
@@ -65,7 +66,7 @@ function SellersPage() {
 function LeadForm({ onSubmitted }: { onSubmitted: (values: LeadFormValues) => void }) {
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
-    defaultValues: { name: "", instagram: "", whatsapp: "" },
+    defaultValues: { name: "", email: "", instagram: "", whatsapp: "" },
   });
 
   async function onSubmit(values: LeadFormValues) {
@@ -120,6 +121,19 @@ function LeadForm({ onSubmitted }: { onSubmitted: (values: LeadFormValues) => vo
                 <FormLabel>Full name</FormLabel>
                 <FormControl>
                   <Input placeholder="Riya Sharma" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="you@email.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -37,7 +37,7 @@ export async function sendSellerWelcomeEmail({ name, email, instagram }) {
 
 // Notifies the Instashop team the moment a founding-seller lead comes in,
 // so they can reach out on WhatsApp within minutes.
-export async function sendLeadNotificationEmail({ name, instagram, category, whatsapp }) {
+export async function sendLeadNotificationEmail({ name, email, instagram, category, whatsapp }) {
   const resend = getResend();
   if (!resend || !NOTIFY_EMAIL) {
     console.warn("RESEND_API_KEY or NOTIFY_EMAIL not set — skipping lead notification email");
@@ -53,6 +53,7 @@ export async function sendLeadNotificationEmail({ name, instagram, category, wha
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
           <h1 style="color: #337357;">New founding seller lead 🎉</h1>
           <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
           <p><strong>Instagram:</strong> @${instagram}</p>
           <p><strong>Category:</strong> ${category}</p>
           <p><strong>WhatsApp:</strong> ${whatsapp}</p>
