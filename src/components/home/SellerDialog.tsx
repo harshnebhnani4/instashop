@@ -141,7 +141,7 @@ export function SellerDialog({ children }: { children: ReactNode }) {
       setOpen(false);
       navigate({
         to: "/payment-success",
-        search: { status: "success", payment_id: undefined, instagram: order.instagram },
+        search: { status: "success", payment_id: undefined, instagram: order.instagram, free: true },
       });
 
       /* RAZORPAY FLOW — re-enable by removing the TEMPORARY free-signup code above.

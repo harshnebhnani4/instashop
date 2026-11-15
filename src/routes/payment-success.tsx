@@ -8,14 +8,16 @@ type PaymentSuccessSearch = {
   status: "success" | "error";
   payment_id: string | undefined;
   instagram: string | undefined;
+  free: boolean;
 };
 
 export const Route = createFileRoute("/payment-success")({
-  head: () => ({ meta: [{ title: "Payment Successful — Instashop" }] }),
+  head: () => ({ meta: [{ title: "You're In — Instashop" }] }),
   validateSearch: (search: Record<string, unknown>): PaymentSuccessSearch => ({
     status: search["status"] === "error" ? "error" : "success",
     payment_id: typeof search["payment_id"] === "string" ? search["payment_id"] : undefined,
     instagram: typeof search["instagram"] === "string" ? search["instagram"] : undefined,
+    free: search["free"] === "true" || search["free"] === true,
   }),
   component: PaymentSuccess,
 });
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/payment-success")({
 const REDIRECT_SECONDS = 5;
 
 function PaymentSuccess() {
-  const { status, payment_id, instagram } = Route.useSearch();
+  const { status, payment_id, instagram, free } = Route.useSearch();
   const navigate = useNavigate();
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
   const isSuccess = status !== "error";
@@ -48,7 +50,7 @@ function PaymentSuccess() {
             <XCircle className="h-14 w-14 text-destructive" />
           )}
           <CardTitle className="font-display text-2xl font-extrabold">
-            {isSuccess ? "Payment successful! 🎉" : "Something went wrong"}
+            {isSuccess ? (free ? "Registration completed! 🎉" : "Payment successful! 🎉") : "Something went wrong"}
           </CardTitle>
           <CardDescription>
             {isSuccess
@@ -57,7 +59,7 @@ function PaymentSuccess() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isSuccess && payment_id && (
+          {isSuccess && !free && payment_id && (
             <p className="rounded-xl bg-blush px-4 py-2 font-mono text-xs text-muted-foreground">
               Transaction ID: {payment_id}
             </p>
