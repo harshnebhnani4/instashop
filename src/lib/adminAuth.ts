@@ -56,6 +56,10 @@ export function adminPostJSON<T>(path: string, body: unknown): Promise<T> {
   return adminFetch<T>(path, { method: "POST", body: JSON.stringify(body) });
 }
 
+export function adminPutJSON<T>(path: string, body: unknown): Promise<T> {
+  return adminFetch<T>(path, { method: "PUT", body: JSON.stringify(body) });
+}
+
 export function adminDeleteJSON<T>(path: string): Promise<T> {
   return adminFetch<T>(path, { method: "DELETE" });
 }

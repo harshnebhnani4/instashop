@@ -17,6 +17,8 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminPromoCodesRouteImport } from './routes/admin/promo-codes'
 import { Route as AdminSellersRouteImport } from './routes/admin/sellers'
 import { Route as AdminPromoCodeRouteImport } from './routes/admin/promo/$code'
+import { Route as ShopHandleIndexRouteImport } from './routes/shop/$handle/index'
+import { Route as ShopHandleProductIdRouteImport } from './routes/shop/$handle/$productId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +60,16 @@ const AdminPromoCodeRoute = AdminPromoCodeRouteImport.update({
   path: '/admin/promo/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopHandleIndexRoute = ShopHandleIndexRouteImport.update({
+  id: '/shop/$handle/',
+  path: '/shop/$handle/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopHandleProductIdRoute = ShopHandleProductIdRouteImport.update({
+  id: '/shop/$handle/$productId',
+  path: '/shop/$handle/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/admin/sellers': typeof AdminSellersRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/promo/$code': typeof AdminPromoCodeRoute
+  '/shop/$handle/$productId': typeof ShopHandleProductIdRoute
+  '/shop/$handle/': typeof ShopHandleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByTo {
   '/admin/sellers': typeof AdminSellersRoute
   '/admin': typeof AdminIndexRoute
   '/admin/promo/$code': typeof AdminPromoCodeRoute
+  '/shop/$handle/$productId': typeof ShopHandleProductIdRoute
+  '/shop/$handle': typeof ShopHandleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +105,8 @@ export interface FileRoutesById {
   '/admin/sellers': typeof AdminSellersRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/promo/$code': typeof AdminPromoCodeRoute
+  '/shop/$handle/$productId': typeof ShopHandleProductIdRoute
+  '/shop/$handle/': typeof ShopHandleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +119,8 @@ export interface FileRouteTypes {
     | '/admin/sellers'
     | '/admin/'
     | '/admin/promo/$code'
+    | '/shop/$handle/$productId'
+    | '/shop/$handle/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +131,8 @@ export interface FileRouteTypes {
     | '/admin/sellers'
     | '/admin'
     | '/admin/promo/$code'
+    | '/shop/$handle/$productId'
+    | '/shop/$handle'
   id:
     | '__root__'
     | '/'
@@ -121,6 +143,8 @@ export interface FileRouteTypes {
     | '/admin/sellers'
     | '/admin/'
     | '/admin/promo/$code'
+    | '/shop/$handle/$productId'
+    | '/shop/$handle/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +156,8 @@ export interface RootRouteChildren {
   AdminSellersRoute: typeof AdminSellersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminPromoCodeRoute: typeof AdminPromoCodeRoute
+  ShopHandleProductIdRoute: typeof ShopHandleProductIdRoute
+  ShopHandleIndexRoute: typeof ShopHandleIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPromoCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop/$handle/': {
+      id: '/shop/$handle/'
+      path: '/shop/$handle'
+      fullPath: '/shop/$handle/'
+      preLoaderRoute: typeof ShopHandleIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop/$handle/$productId': {
+      id: '/shop/$handle/$productId'
+      path: '/shop/$handle/$productId'
+      fullPath: '/shop/$handle/$productId'
+      preLoaderRoute: typeof ShopHandleProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +244,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSellersRoute: AdminSellersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminPromoCodeRoute: AdminPromoCodeRoute,
+  ShopHandleProductIdRoute: ShopHandleProductIdRoute,
+  ShopHandleIndexRoute: ShopHandleIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
