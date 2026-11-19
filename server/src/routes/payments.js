@@ -114,33 +114,6 @@ paymentsRouter.post("/create-order", async (req, res) => {
   const { amount, error: promoError } = await resolveAmount(promoCode);
   if (promoError) return res.status(400).json({ error: promoError });
 
-  // TEMPORARY: signups are free for everyone right now — no Razorpay order
-  // at all, regardless of promo code or resolved amount. To re-enable paid
-  // signups, delete this block and uncomment the Razorpay flow below it.
-  void amount;
-  try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    const seller = await Seller.create({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      instagram: instagram.trim().replace(/^@/, ""),
-      category,
-      passwordHash,
-      promoCode: typeof promoCode === "string" ? promoCode.trim() : "",
-      amount: 0,
-      razorpayOrderId: `free_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      razorpayPaymentId: "free",
-    });
-    sendSellerWelcomeEmail({ name: seller.name, email: seller.email, instagram: seller.instagram });
-    return res.status(201).json({ free: true, id: seller._id, instagram: seller.instagram });
-  } catch (err) {
-    console.error("Failed to save free seller signup", err);
-    return res.status(500).json({ error: "Something went wrong. Please try again." });
-  }
-  // --- END TEMPORARY ---
-
-  /* RAZORPAY FLOW — re-enable by removing the TEMPORARY block above.
   try {
     const order = await getRazorpay().orders.create({
       amount: amount * 100,
@@ -166,7 +139,6 @@ paymentsRouter.post("/create-order", async (req, res) => {
     console.error("Failed to create Razorpay order", err);
     return res.status(500).json({ error: "Could not start payment. Please try again." });
   }
-  */
 });
 
 // Fired by the browser right after Razorpay's checkout succeeds. On mobile,

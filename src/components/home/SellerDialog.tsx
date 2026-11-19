@@ -128,23 +128,13 @@ export function SellerDialog({ children }: { children: ReactNode }) {
 
   const amount = promoStatus.state === "valid" && promoStatus.amount != null ? promoStatus.amount : DEFAULT_AMOUNT;
 
-  // TEMPORARY: signups are free for everyone right now, so the backend
-  // always responds with { free: true, ... } and there's no Razorpay step.
-  // To re-enable paid signups, restore the commented block below and the
-  // paid branch of the response type.
   async function onSubmit(values: SellerFormValues) {
     try {
-      const order = await postJSON<{ free: true; id: string; instagram: string }>(
+      const order = await postJSON<{ orderId: string; amount: number; currency: string; keyId: string }>(
         "/api/payments/create-order",
         values,
       );
-      setOpen(false);
-      navigate({
-        to: "/payment-success",
-        search: { status: "success", payment_id: undefined, instagram: order.instagram, free: true },
-      });
 
-      /* RAZORPAY FLOW — re-enable by removing the TEMPORARY free-signup code above.
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded || !window.Razorpay) {
         toast.error("Couldn't load the payment window. Check your connection and try again.");
@@ -178,7 +168,6 @@ export function SellerDialog({ children }: { children: ReactNode }) {
       // buttons unresponsive until the trap happens to let a click through.
       setOpen(false);
       razorpay.open();
-      */
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
@@ -342,13 +331,13 @@ export function SellerDialog({ children }: { children: ReactNode }) {
               )}
             />
 
-            {/* TEMPORARY: free for everyone right now — swap back to the
-                dynamic ₹{amount} display once paid signups are re-enabled. */}
             <div className="flex items-center justify-between rounded-2xl bg-blush px-4 py-3.5">
               <span className="text-sm font-semibold">One-time listing fee</span>
               <span className="flex items-baseline gap-2">
-                <span className="text-sm text-muted-foreground line-through">₹{DEFAULT_AMOUNT.toLocaleString("en-IN")}</span>
-                <span className="font-display text-lg font-extrabold text-primary">Free</span>
+                {promoStatus.state === "valid" && (
+                  <span className="text-sm text-muted-foreground line-through">₹{DEFAULT_AMOUNT.toLocaleString("en-IN")}</span>
+                )}
+                <span className="font-display text-lg font-extrabold text-primary">₹{amount.toLocaleString("en-IN")}</span>
               </span>
             </div>
 
@@ -359,7 +348,7 @@ export function SellerDialog({ children }: { children: ReactNode }) {
                 "shimmer w-full rounded-full bg-primary py-3.5 font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60",
               )}
             >
-              {form.formState.isSubmitting ? "Submitting…" : "Join Instashop — it's free"}
+              {form.formState.isSubmitting ? "Starting payment…" : `Pay ₹${amount.toLocaleString("en-IN")}`}
             </button>
           </form>
         </Form>
